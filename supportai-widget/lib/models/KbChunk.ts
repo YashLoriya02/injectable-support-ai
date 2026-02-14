@@ -1,19 +1,16 @@
-import mongoose, { Schema } from "mongoose";
+import { Schema, model, models } from "mongoose";
 
 const KbChunkSchema = new Schema(
     {
-        appKey: { type: String, index: true, required: true },
-        title: { type: String, required: true },
+        appKey: { type: String, required: true, index: true },
+        title: { type: String, default: "" },
         text: { type: String, required: true },
         sourceFile: { type: String, default: "" },
+        createdAtMs: { type: Number, default: () => Date.now() },
     },
     { timestamps: true }
 );
 
-KbChunkSchema.index({ appKey: 1, title: "text", text: "text" });
+KbChunkSchema.index({ title: "text", text: "text" });
 
-const MODEL_NAME = "kbchunk";
-
-export const KbChunk =
-    (mongoose.models[MODEL_NAME] as mongoose.Model<any>) ||
-    mongoose.model(MODEL_NAME, KbChunkSchema);
+export const KbChunk = models.KbChunk || model("KbChunk", KbChunkSchema);
