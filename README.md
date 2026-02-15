@@ -1,6 +1,6 @@
 ## Next Steps :-
 
-[ ] Replicate model and api of kbchunk (`/ingest`) in dashboard from widget
+- Replicate model and api of kbchunk (`/ingest`) in dashboard from widget
 - Call `/ingest` on POST `/app` for saving md content in kb
 - Change similarly in `/edit` page
 - Some optimized work-around for extracting kb while generating response
