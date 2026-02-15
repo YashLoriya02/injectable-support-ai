@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import KebabMenu from "@/components/KebabMenu";
 import ConfirmModal from "@/components/ConfirmModal";
+import { toast } from "sonner";
 
 type AppRow = {
     appId: string;
@@ -147,7 +148,7 @@ export default function AppsPage() {
                                 <button
                                     onClick={() => {
                                         navigator.clipboard.writeText(a.appKey);
-                                        alert("Copied appKey");
+                                        toast.success("Copied appKey");
                                     }}
                                     className="text-xs px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10"
                                 >

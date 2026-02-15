@@ -108,8 +108,6 @@ export const authOptions: NextAuthOptions = {
 export async function requireSession() {
     const session = await getServerSession(authOptions);
 
-    console.log("session in auth: ", session)
-
     const userId = (session as any)?.user?.mongoId;
 
     if (!session || !userId) {

@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Copy, Trash2, Save } from "lucide-react";
+import ConfirmModal from "@/components/ConfirmModal";
+import { toast } from "sonner";
 
 type AppDoc = {
     _id: string;
@@ -13,7 +15,6 @@ type AppDoc = {
     copy: { title: string; subtitle: string; placeholder: string };
     enableBorder: boolean;
     borderColor: string;
-    kbVersion?: number;
 };
 
 function domainsToText(arr: string[]) {
@@ -22,7 +23,6 @@ function domainsToText(arr: string[]) {
 
 export default function AppEditPage() {
     const params = useParams<{ appId: string }>();
-    const router = useRouter();
     const id = params?.appId;
 
     const [app, setApp] = useState<AppDoc | null>(null);
@@ -44,9 +44,13 @@ export default function AppEditPage() {
     const [mdFileName, setMdFileName] = useState("docs.md");
     const [ingesting, setIngesting] = useState(false);
 
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [selected, setSelected] = useState<AppDoc | null>(null);
+
     const embedSnippet = useMemo(() => {
         if (!app?.appKey) return "";
-        return `<script src="https://YOUR_DOMAIN/supportai.js"></script>
+        return `<script src="https://supportai-widget.vercel.app/widget-loader.js"></script>
 <script>
   SupportAI.init({
     appKey: "${app.appKey}",
@@ -63,6 +67,7 @@ export default function AppEditPage() {
             .then((r) => r.json())
             .then((data) => {
                 if (!data?.app) throw new Error(data?.error || "LOAD_FAILED");
+
                 const a: AppDoc = data.app;
                 setApp(a);
 
@@ -75,8 +80,29 @@ export default function AppEditPage() {
             })
             .catch((e) => setErr(e.message || "LOAD_FAILED"))
             .finally(() => setLoading(false));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
+
+    async function deleteApp() {
+        if (!selected) return;
+
+        setDeleting(true);
+        try {
+            const r = await fetch(`/api/apps/${selected._id}`, { method: "DELETE" });
+            const data = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(data?.error || "DELETE_FAILED");
+
+            setConfirmOpen(false);
+            setSelected(null);
+
+            setTimeout(() => {
+                window.location.href = "/dashboard/apps";
+            }, 500);
+        } catch (e: any) {
+            alert(e.message || "DELETE_FAILED");
+        } finally {
+            setDeleting(false);
+        }
+    }
 
     async function onSave() {
         if (!app) return;
@@ -100,28 +126,11 @@ export default function AppEditPage() {
             if (!r.ok) throw new Error(data?.error || "SAVE_FAILED");
             setApp(data.app);
             setOk("Saved");
+
             setTimeout(() => setOk(""), 1200);
         } catch (e: any) {
             setErr(e.message || "SAVE_FAILED");
         } finally {
-            setSaving(false);
-        }
-    }
-
-    async function onDelete() {
-        if (!app) return;
-        const yes = confirm("Delete this app? This cannot be undone.");
-        if (!yes) return;
-
-        setSaving(true);
-        setErr("");
-        try {
-            const r = await fetch(`/api/apps/${app._id}`, { method: "DELETE" });
-            const data = await r.json().catch(() => ({}));
-            if (!r.ok) throw new Error(data?.error || "DELETE_FAILED");
-            router.push("/dashboard/apps");
-        } catch (e: any) {
-            setErr(e.message || "DELETE_FAILED");
             setSaving(false);
         }
     }
@@ -182,36 +191,36 @@ export default function AppEditPage() {
     return (
         <div className="space-y-5">
             {/* Top bar */}
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-wrap items-start justify-between gap-5">
                 <div className="min-w-0">
                     <div className="text-lg font-bold truncate">{app.name}</div>
                     <div className="text-xs text-white/60 mt-1">
                         appKey: <span className="font-mono text-white/80">{app.appKey}</span>
-                        {typeof app.kbVersion === "number" && (
-                            <span className="ml-2 text-white/40">• KB v{app.kbVersion}</span>
-                        )}
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigator.clipboard.writeText(app.appKey)}
                         className="text-xs px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10"
                     >
-                        <Copy className="h-4 w-4 inline -mt-0.5 mr-1" /> Copy key
+                        <Copy className="h-4 w-4 inline -mt-0.5 mr-1" /> Copy
                     </button>
 
                     <button
                         onClick={onSave}
                         disabled={saving}
-                        className="text-xs px-3 py-2 rounded-xl bg-white text-black font-bold disabled:opacity-60"
+                        className="text-xs px-3 py-2 rounded-xl bg-white/80 text-black font-bold disabled:opacity-60"
                     >
                         <Save className="h-4 w-4 inline -mt-0.5 mr-1" />
                         {saving ? "Saving…" : "Save"}
                     </button>
 
                     <button
-                        onClick={onDelete}
+                        onClick={() => {
+                            setSelected(app)
+                            setConfirmOpen(true)
+                        }}
                         disabled={saving}
                         className="text-xs px-3 py-2 rounded-xl bg-red-500/15 border border-red-500/40 text-red-200 hover:bg-red-500/20 disabled:opacity-60"
                     >
@@ -383,19 +392,17 @@ export default function AppEditPage() {
                 </div>
             </div>
 
-            {/* Embed */}
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-2">
-                <div className="font-bold text-sm">Embed code</div>
-                <pre className="text-xs overflow-auto rounded-xl bg-black/40 border border-white/10 p-3 whitespace-pre">
-                    {embedSnippet}
-                </pre>
-                <button
-                    onClick={() => navigator.clipboard.writeText(embedSnippet)}
-                    className="text-xs px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10"
-                >
-                    <Copy className="h-4 w-4 inline -mt-0.5 mr-1" /> Copy embed
-                </button>
-            </div>
+            <ConfirmModal
+                open={confirmOpen}
+                title="Delete app?"
+                description={`This will delete "${selected?.name}". You can't undo this.`}
+                confirmText="Delete"
+                loading={deleting}
+                onClose={() => {
+                    if (!deleting) setConfirmOpen(false);
+                }}
+                onConfirm={deleteApp}
+            />
         </div>
     );
 }

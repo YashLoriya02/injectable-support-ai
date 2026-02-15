@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useRef, useState } from "react";
+import { toast } from 'sonner'
 
 function parseDomains(s: string) {
     return s
@@ -128,11 +129,11 @@ export default function NewAppPage() {
             }
 
             setOk(data);
+            toast.success('App created successfully')
 
-            // Redirect to apps list (or settings) after 600ms
             setTimeout(() => {
                 window.location.href = "/dashboard/apps";
-            }, 600);
+            }, 1000);
         } catch (e: any) {
             setErr(e.message || "CREATE_APP_FAILED");
         } finally {
@@ -270,8 +271,8 @@ export default function NewAppPage() {
                                     onDragLeave={handleDragLeave}
                                     onDrop={handleDrop}
                                     className={`rounded-xl cursor-pointer border-2 border-dashed p-8 transition-all ${isDragging
-                                            ? "border-white/70 bg-white/10"
-                                            : "border-white/30 bg-black/20 hover:border-white/50 hover:bg-black/30"
+                                        ? "border-white/70 bg-white/10"
+                                        : "border-white/30 bg-black/20 hover:border-white/50 hover:bg-black/30"
                                         }`}
                                 >
                                     <div className="flex flex-col items-center justify-center gap-3">

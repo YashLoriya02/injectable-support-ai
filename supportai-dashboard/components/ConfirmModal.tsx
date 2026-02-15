@@ -24,7 +24,7 @@ export default function ConfirmModal({
     return (
         <div className="fixed inset-0 z-9999 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-            <div className="relative w-[92vw] max-w-md rounded-2xl border border-white/10 bg-[#0B1220] p-4 shadow-2xl">
+            <div className="relative w-[92vw] max-w-lg rounded-2xl border border-white/10 bg-[#1c2029] p-4 shadow-2xl">
                 <div className="text-base font-bold">{title}</div>
                 {description && <div className="mt-1 text-sm text-white/70">{description}</div>}
 
