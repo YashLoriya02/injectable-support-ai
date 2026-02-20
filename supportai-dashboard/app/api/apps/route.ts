@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectMongo } from "@/lib/db";
 import { AppModel } from "@/lib/models/App";
 import { requireSession } from "@/lib/auth";
+import { KbChunk } from "@/lib/models/KbChunk";
 
 function genAppKey() {
     return "app_" + crypto.randomUUID().replace(/-/g, "").slice(0, 24);
@@ -52,7 +53,6 @@ export async function POST(req: Request) {
 
     await connectMongo();
 
-    // Ensure unique appKey (very low chance of collision, but still)
     let appKey = genAppKey();
     for (let i = 0; i < 3; i++) {
         const exists = await AppModel.exists({ appKey });
@@ -65,8 +65,17 @@ export async function POST(req: Request) {
         name,
         appKey,
         allowedDomains,
-        markdownRaw,
     });
+
+    if (markdownRaw) {
+        await KbChunk.deleteMany({ appKey });
+
+        await KbChunk.insertOne({
+            appKey,
+            title: name,
+            text: markdownRaw
+        });
+    }
 
     return NextResponse.json({
         appId: String(created._id),

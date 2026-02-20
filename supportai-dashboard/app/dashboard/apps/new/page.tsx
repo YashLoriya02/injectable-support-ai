@@ -132,7 +132,7 @@ export default function NewAppPage() {
             toast.success('App created successfully')
 
             setTimeout(() => {
-                window.location.href = "/dashboard/apps";
+                window.location.href = `/dashboard/apps/${data.appId}/setup?appKey=${encodeURIComponent(data.appKey)}`;
             }, 1000);
         } catch (e: any) {
             setErr(e.message || "CREATE_APP_FAILED");

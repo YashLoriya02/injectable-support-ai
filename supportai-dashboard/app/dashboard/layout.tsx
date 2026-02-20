@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
     const pathname = usePathname();
-    const isNewAppPage = pathname === "/dashboard/apps/new";
+    const isNewAppPage = pathname === "/dashboard/apps/new" || pathname.includes("/edit") || pathname.includes("/setup");
 
     return (
         <div className="min-h-screen bg-black text-white">

@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectMongo } from "@/lib/db";
-import { AppModel} from "@/lib/models/App";
+import { AppModel } from "@/lib/models/App";
 import { parseDomains } from "@/lib/parseDomains";
+import { KbChunk } from "@/lib/models/KbChunk";
 
 function json(data: any, status = 200) {
     return NextResponse.json(data, { status });
@@ -16,13 +17,16 @@ export async function GET(_: Request, { params }: { params: Promise<{ appId: str
 
     await connectMongo();
 
-    console.log("ID: ", (await params).appId);
-    console.log("OWNER ID: ", ownerId);
-
     const app = await AppModel.findOne({ _id: (await params).appId, ownerId }).lean();
     if (!app) return json({ error: "NOT_FOUND" }, 404);
 
-    return json({ app });
+    const kb = await KbChunk.findOne({ appKey: app.appKey })
+    const updatedApp = {
+        ...app,
+        kb: kb.text
+    }
+
+    return json({ app: updatedApp });
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ appId: string }> }) {
