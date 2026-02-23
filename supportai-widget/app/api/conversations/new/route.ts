@@ -3,8 +3,8 @@ import { getWidgetConfig } from "@/lib/widgetConfigStore";
 import { connectMongo } from "@/lib/db";
 import { Conversation } from "@/lib/models/Conversation";
 
-function isDomainAllowed(appKey: string, parentOrigin: string) {
-    const cfg = getWidgetConfig(appKey);
+async function isDomainAllowed(appKey: string, parentOrigin: string) {
+    const cfg = await getWidgetConfig(appKey);
     if (!cfg) return { ok: false, code: "INVALID_APP_KEY" as const };
 
     const host = parentOrigin ? new URL(parentOrigin).hostname : "";
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
     if (!appKey) return NextResponse.json({ error: "MISSING_APP_KEY" }, { status: 400 });
 
-    const allowed = isDomainAllowed(appKey, parentOrigin);
+    const allowed = await isDomainAllowed(appKey, parentOrigin);
     if (!allowed.ok) return NextResponse.json({ error: allowed.code, ...allowed }, { status: 403 });
 
     await connectMongo();

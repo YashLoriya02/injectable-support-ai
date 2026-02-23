@@ -85,8 +85,5 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ appId: 
     const app = await AppModel.findOneAndDelete({ _id: (await params).appId, ownerId }).lean();
     if (!app) return json({ error: "NOT_FOUND" }, 404);
 
-    // optional: deleting KB chunks
-    // await KbChunk.deleteMany({ appKey: app.appKey });
-
     return json({ ok: true });
 }

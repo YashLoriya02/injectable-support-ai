@@ -3,6 +3,7 @@ import { connectMongo } from "@/lib/db";
 import { AppModel } from "@/lib/models/App";
 import { requireSession } from "@/lib/auth";
 import { KbChunk } from "@/lib/models/KbChunk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 function genAppKey() {
     return "app_" + crypto.randomUUID().replace(/-/g, "").slice(0, 24);
@@ -70,10 +71,17 @@ export async function POST(req: Request) {
     if (markdownRaw) {
         await KbChunk.deleteMany({ appKey });
 
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+        const embeddingModel = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
+
+        const result = await embeddingModel.embedContent(markdownRaw);
+        const embedding = result.embedding.values;
+
         await KbChunk.insertOne({
             appKey,
             title: name,
-            text: markdownRaw
+            text: markdownRaw,
+            embedding,
         });
     }
 

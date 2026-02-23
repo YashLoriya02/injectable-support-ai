@@ -165,8 +165,8 @@ export default function MdPreviewDrawer({
                                 key={mode}
                                 onClick={() => setLayout(mode)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all ${layout === mode
-                                        ? "bg-white/15 text-white"
-                                        : "text-white/40 hover:text-white/70"
+                                    ? "bg-white/15 text-white"
+                                    : "text-white/40 hover:text-white/70"
                                     }`}
                             >
                                 {icon}

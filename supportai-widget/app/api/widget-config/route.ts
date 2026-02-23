@@ -12,7 +12,7 @@ export async function GET(req: Request) {
         );
     }
 
-    const cfg = getWidgetConfig(appKey);
+    const cfg = await getWidgetConfig(appKey);
     if (!cfg) {
         return NextResponse.json(
             { error: "INVALID_APP_KEY" },

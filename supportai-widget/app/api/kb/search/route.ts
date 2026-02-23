@@ -3,8 +3,8 @@ import { getWidgetConfig } from "@/lib/widgetConfigStore";
 import { connectMongo } from "@/lib/db";
 import { KbChunk } from "@/lib/models/KbChunk";
 
-function domainCheck(appKey: string, parentOrigin: string) {
-    const cfg = getWidgetConfig(appKey);
+async function domainCheck(appKey: string, parentOrigin: string) {
+    const cfg = await getWidgetConfig(appKey);
     if (!cfg) return { ok: false, error: "INVALID_APP_KEY" as const };
     const host = parentOrigin ? new URL(parentOrigin).hostname : "";
     if (!host) return { ok: false, error: "MISSING_PARENT_ORIGIN" as const };
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     if (!appKey) return NextResponse.json({ error: "MISSING_APP_KEY" }, { status: 400 });
     if (!query) return NextResponse.json({ error: "MISSING_QUERY" }, { status: 400 });
 
-    const chk = domainCheck(appKey, parentOrigin);
+    const chk = await domainCheck(appKey, parentOrigin);
     if (!chk.ok) return NextResponse.json(chk, { status: 403 });
 
     await connectMongo();

@@ -4,8 +4,8 @@ import { chunkMarkdown } from "@/lib/kbChunker";
 import { KbChunk } from "@/lib/models/KbChunk";
 import { connectMongo } from "@/lib/db";
 
-function domainCheck(appKey: string, parentOrigin: string) {
-    const cfg = getWidgetConfig(appKey);
+async function domainCheck(appKey: string, parentOrigin: string) {
+    const cfg = await getWidgetConfig(appKey);
     if (!cfg) return { ok: false, error: "INVALID_APP_KEY" as const };
     const host = parentOrigin ? new URL(parentOrigin).hostname : "";
     if (!host) return { ok: false, error: "MISSING_PARENT_ORIGIN" as const };
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     if (!appKey) return NextResponse.json({ error: "MISSING_APP_KEY" }, { status: 400 });
     if (!content) return NextResponse.json({ error: "MISSING_CONTENT" }, { status: 400 });
 
-    const chk = domainCheck(appKey, parentOrigin);
+    const chk = await domainCheck(appKey, parentOrigin);
     if (!chk.ok) return NextResponse.json(chk, { status: 403 });
 
     const chunks = chunkMarkdown(filename, content);

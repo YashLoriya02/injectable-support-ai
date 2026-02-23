@@ -4,7 +4,10 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { X } from "lucide-react";
 import { RiRobot2Fill } from "react-icons/ri";
+import ReactMarkdown from "react-markdown"
 import { ChatMsg, RemoteConfig } from "@/types";
+import MdPreviewDrawer from "@/components/ChatMessage";
+import ChatMessage from "@/components/ChatMessage";
 
 const SOURCE = "supportai_widget";
 const STORAGE_KEY = "supportai_conv_id";
@@ -44,15 +47,16 @@ export default function EmbedPage() {
         const cid = localStorage.getItem(STORAGE_KEY) || "";
         if (!cid) return;
 
-        fetch(`/api/conversations/${cid}`)
-            .then((r) => r.json())
-            .then((data) => {
-                if (Array.isArray(data?.messages)) setMessages(data.messages);
-                if (data?.conversationId) setConversationId(data.conversationId);
-            })
-            .catch(() => { });
-    }, [appKey]);
-
+        if (open) {
+            fetch(`/api/conversations/${cid}`)
+                .then((r) => r.json())
+                .then((data) => {
+                    if (Array.isArray(data?.messages)) setMessages(data.messages);
+                    if (data?.conversationId) setConversationId(data.conversationId);
+                })
+                .catch(() => { console.log("Error fetching convo") });
+        }
+    }, [appKey, open]);
 
     useEffect(() => {
         if (!appKey) return;
@@ -257,12 +261,15 @@ export default function EmbedPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <button
-                        onClick={handleNewChat}
-                        className="text-xs px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10"
-                    >
-                        New chat
-                    </button>
+                    {
+                        !cfgError &&
+                        <button
+                            onClick={handleNewChat}
+                            className="text-xs px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10"
+                        >
+                            New chat
+                        </button>
+                    }
                     <button
                         onClick={handleClose}
                         aria-label="Close"
@@ -284,7 +291,7 @@ export default function EmbedPage() {
                             Config error: {cfgError}
                         </div>
                     ) : <>
-                        {messages.map((m) => (
+                        {/* {messages.map((m) => (
                             <div
                                 key={m.id}
                                 className={`w-full flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
@@ -300,38 +307,11 @@ export default function EmbedPage() {
                                     {m.text}
                                 </div>
                             </div>
+                        ))} */}
+
+                        {messages.map((msg) => (
+                            <ChatMessage key={msg.id} role={msg.role} text={msg.text} primary={primary} />
                         ))}
-
-                        {/* {isBotTyping && (
-                            <>
-                                <div
-                                    className=""
-                                    aria-live="polite"
-                                    aria-atomic="true"
-                                >
-                                    <style>{`
-                                        @keyframes healoDotWave {
-                                            0%, 60%, 100% { transform: translateY(0); opacity: .35; }
-                                            30% { transform: translateY(-3px); opacity: .85; }
-                                        }
-                                        .healo-typing-dot { width: 6px; height: 6px; border-radius: 9999px; background: currentColor; display:inline-block; animation: healoDotWave 1.2s infinite ease-in-out; }
-                                        .healo-typing-dot:nth-child(1){ animation-delay: 0s; }
-                                        .healo-typing-dot:nth-child(2){ animation-delay: .15s; }
-                                        .healo-typing-dot:nth-child(3){ animation-delay: .30s; }
-                                        `}</style>
-
-                                    <div className="flex gap-2">
-                                        <h2
-                                            className={`relative inline-flex items-center gap-1 px-4 py-3 rounded-xl font-semibold text-lg bg-white/10 text-white/80`}
-                                        >
-                                            <span className="healo-typing-dot" />
-                                            <span className="healo-typing-dot" />
-                                            <span className="healo-typing-dot" />
-                                        </h2>
-                                    </div>
-                                </div>
-                            </>
-                        )} */}
 
                         <div ref={bottomRef} />
                     </>
